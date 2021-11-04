@@ -1,0 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+class Solution {
+    static void Main(String[] args) {
+        var L = 2.5d;
+        var k = 5.0d;
+        var e = 2.71828d;
+        var P = Math.Pow(L, k) * Math.Pow(e, -L) / (1*2*3*4*5);
+        Console.WriteLine("{0:0.000}", P);
+    }
+}
