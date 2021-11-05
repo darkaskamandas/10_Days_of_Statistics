@@ -1,0 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+
+class Solution {
+    
+    static void Main(String[] args) {        
+        var N = Convert.ToDouble(Console.ReadLine().Trim());
+        var X = Console.ReadLine().Trim().Split().Select(x => Convert.ToDouble(x)).ToArray();
+        var Y = Console.ReadLine().Trim().Split().Select(y => Convert.ToDouble(y)).ToArray();        
+        Console.WriteLine("{0:0.000}", PearsonCorrelationCoefficient(X, Y));        
+    }
+    
+    static double Mean(double[] X) {
+        var sum = 0.0d;
+        for (var i = 0; i < X.Length; ++i) { sum += X[i]; }
+        return sum / Convert.ToDouble(X.Length);
+    }
+    
+    static double Covariance(double[] X, double[] Y) {
+        var N = Math.Min(X.Length, Y.Length);
+        var meanX = Mean(X);
+        var meanY = Mean(Y);
+        var sum = 0.0d;
+        for (var i = 0; i < N; ++i) { sum += (X[i] - meanX)*(Y[i] - meanY); }
+        return sum / Convert.ToDouble(N);        
+    }
+    
+    static double StandardDeviation(double[] X) {
+        var meanX = Mean(X);
+        var sum = 0.0d;
+        for (var i = 0; i < X.Length; ++i) { 
+            sum += Math.Pow(X[i] - meanX, 2.0d);
+        }
+        return Math.Sqrt(sum / Convert.ToDouble(X.Length));
+    }
+    
+    static double PearsonCorrelationCoefficient(double[] X, double[] Y) {
+        var stdDevX = StandardDeviation(X);
+        var stdDevY = StandardDeviation(Y);
+        var covXY = Covariance(X, Y);
+        return covXY / (stdDevX * stdDevY);
+    }
+        
+}
