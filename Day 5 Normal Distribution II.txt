@@ -1,0 +1,50 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+class Solution {
+    static double getValue(double data, double deviation, double mean)
+    {
+        //double res = (double)( 1/( deviation * Math.Sqrt((double)(2 * Math.PI)) ) ) * (double)(Math.Exp( (double)( -(Math.Pow( (double)( data - mean ), 2))/(2 * Math.Pow(deviation,2)))));
+        //double res = 1 / ( deviation * Math.Sqrt(2 * Math.PI) ) * (Math.Exp( -(Math.Pow(data - mean, 2)/(2 * Math.Pow(deviation,2)))));
+        //double res = Math.Exp( -(Math.Pow(data - mean, 2))/(2 * Math.Pow(deviation,2)) ) / ( deviation * Math.Sqrt(2 * Math.PI) );        
+/*        Console.WriteLine("temp: " + (data-mean)/deviation);
+        double res = Math.Exp(-(Math.Pow((data - mean)/deviation, 2))/2.0) / ( deviation * Math.Sqrt(2.0 * Math.PI) );
+        Console.WriteLine("res: " + res);
+        return res;
+*/        
+    // constants
+        double a1 =  0.254829592;
+        double a2 = -0.284496736;
+        double a3 =  1.421413741;
+        double a4 = -1.453152027;
+        double a5 =  1.061405429;
+        double p  =  0.3275911;
+
+        double x = (data - mean)/deviation;
+        // Save the sign of x
+        int sign = 1;
+        if (x < 0)
+            sign = -1;
+        x = Math.Abs(x)/Math.Sqrt(2.0);
+
+        // A&S formula 7.1.26
+        double t = 1.0/(1.0 + p*x);
+        double y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.Exp(-x*x);
+
+        return 0.5*(1.0 + sign*y);
+    }
+    static void Main(String[] args) {
+        /* Enter your code here. Read input from STDIN. Print output to STDOUT. Your class should be named Solution */
+        string[] dataList = Console.ReadLine().Split(' ');
+        uint mean = UInt32.Parse(dataList[0]);
+        uint deviation = UInt32.Parse(dataList[1]);
+        double data = Double.Parse(Console.ReadLine());
+        double data2 = Double.Parse(Console.ReadLine());
+        //double res1 = (double)(1/(deviation*Math.Sqrt((double)(2 * Math.PI)))) * Math.Exp((double)(-(Math.Pow((double)(data - mean)), 2)/(2 * Math.Pow(deviation,2))));
+        double res1 = 1 - getValue(data, (double)(deviation), (double)(mean));
+        //double res2 = Math.Abs( getValue((double)(rangeHigh), (double)(deviation), (double)(mean)) - getValue((double)(rangeLow), (double)(deviation), (double)(mean)) );
+        double res2 = getValue(data2, (double)(deviation), (double)(mean));
+        double res3 = 1 - res2;
+        Console.WriteLine(String.Format("{0:0.00}", res1 * 100.0) + "\n" + String.Format("{0:0.00}", res3 * 100.0) + "\n" + String.Format("{0:0.00}", res2 * 100.0));
+    }
+}
