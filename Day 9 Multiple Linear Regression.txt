@@ -1,0 +1,219 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+class Solution {
+    static void Main(String[] args) {
+        var arr = Console.ReadLine().Split(' ').Select(s => int.Parse(s)).ToArray();
+        var m = arr[0];
+        var n = arr[1];
+        var X = new Matrix(n, m + 1);
+        var Y = new Matrix(n, 1);
+        for (var i = 0; i < n; i++)
+        {
+            var v = Console.ReadLine().Split(' ').Select(s => double.Parse(s)).ToArray();
+            X.SetLine(i, new[] { 1.0 }.Concat(v.Take(v.Length - 1)));
+            Y.SetLine(i,new[] { v.Last() });
+        }
+        var B = (X.Transposed() * X).Inverse() * X.Transposed() * Y;
+        var x = int.Parse(Console.ReadLine());
+        while (x-->0)
+        {
+            var v = Console.ReadLine().Split(' ').Select(s => double.Parse(s)).ToArray();
+            X = new Matrix(1, m+1);
+            X.SetLine(0, new[] { 1.0 }.Concat(v));
+            var y = (X * B).ToScalar();
+            Console.WriteLine(y);
+        }
+    }
+    
+    public class Matrix
+    {
+        private double[][] _arr;
+
+        public Matrix(int lines, int columns)
+        {
+            Lines = lines;
+            Columns = columns;
+            _arr = new double[lines][];
+            for (var line = 0; line < Lines; line++)
+            {
+                _arr[line] = new double[Columns];
+            }
+        }
+
+        public int Lines { get; set; }
+        public int Columns { get; set; }
+
+        public static Matrix operator *(Matrix m1, Matrix m2)
+        {
+            if (m1.Columns != m2.Lines) throw new ArgumentException("The two matrices have incorrect sizes. They cannot be multplied");
+            var result = new Matrix(m1.Lines, m2.Columns);
+            var looper = m2.Lines;
+            for (var line = 0; line < result.Lines; line++)
+            {
+                for (var column = 0; column < result.Columns; column++)
+                {
+                    var mul = 0.0;
+                    for (var i = 0; i < looper; i++)
+                    {
+                        mul += m1[line,i] * m2[i,column];
+                    }
+                    result[line, column] = mul;
+                }
+            }
+            return result;
+        }
+
+        public double this[int line, int column]
+        {
+            get
+            {
+                return _arr[line][column];
+            }
+            set
+            {
+                _arr[line][column] = value;
+            }
+        }
+
+        public Matrix Transposed()
+        {
+            var result = new Matrix(Columns, Lines);
+            for (var column = 0; column < Columns; column++)
+            {
+                var arr = new double[Lines];
+                for (var line = 0; line < Lines; line++)
+                {
+                    arr[line] = _arr[line][column];
+                }
+                result.SetLine(column, arr);
+            }
+            return result;
+        }
+
+        public Matrix Inverse()
+        {
+            if (Columns != Lines) throw new InvalidOperationException("Cannot inverse a rectangular matrix");
+
+            var working = (Matrix)this.Clone();
+            var dimension = Columns;
+            var inverse = new Matrix(dimension, dimension);
+            for (int i = 0; i < dimension; i++) inverse[i, i] = 1.0;
+
+            for (int currentRow = 0; currentRow < dimension; currentRow++) 
+            {
+                double biggestSoFar = 0.0; int biggestRow = currentRow;
+                for (int x = currentRow; x < dimension; x++)
+                {
+                    double sizeOfThis = Math.Abs(working[x, currentRow]);
+                    if (sizeOfThis > biggestSoFar)
+                    {
+                        biggestSoFar = sizeOfThis;
+                        biggestRow = x;
+                    }
+                }
+
+                if (biggestRow != currentRow)
+                {
+                    double temp;
+                    for (int lop = currentRow; lop < dimension; lop++)
+                    {
+                        temp = working[currentRow, lop];
+                        working[currentRow, lop] = working[biggestRow, lop];
+                        working[biggestRow, lop] = temp;
+                    }
+                    for (int lop = 0; lop < dimension; lop++)
+                    {
+                        temp = inverse[currentRow, lop];
+                        inverse[currentRow, lop] = inverse[biggestRow, lop];
+                        inverse[biggestRow, lop] = temp;
+                    }
+                }
+
+                for (int lop = currentRow + 1; lop < dimension; lop++)
+                {
+                    if (working[currentRow, currentRow] == 0)
+                    {
+                        throw new InvalidOperationException("Matrix is ill conditioned");
+                    }
+                    var factor = working[lop, currentRow] / working[currentRow, currentRow];
+
+                    if (factor != 0.0)
+                    {
+                        for (int lp = currentRow; lp < dimension; lp++)
+                            working[lop, lp] -= factor * working[currentRow, lp];
+                        for (int lp = 0; lp < dimension; lp++)
+                            inverse[lop, lp] -= factor * inverse[currentRow, lp];
+                    }
+                }
+            }
+
+            for (int currentRow = dimension - 1; currentRow >= 0; currentRow--)
+            {
+                if (working[currentRow, currentRow] == 0)
+                {
+                    throw new InvalidOperationException("Matrix is ill conditioned");
+                }
+
+                for (int lop = currentRow - 1; lop >= 0; lop--)
+                {
+                    double factor = working[lop, currentRow] / working[currentRow, currentRow];
+
+                    working[lop, currentRow] = 0.0;
+
+                    if (factor != 0.0)
+                    {
+                        for (int lp = 0; lp < dimension; lp++)
+                        {
+                            inverse[lop, lp] -= factor * inverse[currentRow, lp];
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < dimension; i++)
+            {
+                var scale = working[i, i];
+                for (int lop = 0; lop < dimension; lop++) inverse[i, lop] /= scale;
+            }
+
+            return inverse;
+        }
+
+        public Matrix Clone()
+        {
+            var result = new Matrix(Lines, Columns);
+            for (var i=0; i<Lines; i++)
+            {
+                result.SetLine(i, _arr[i]);
+            }
+            return result;
+        }
+
+        public void SetLine(int line, IEnumerable<double> enm)
+        {
+            var arr = new double[Columns];
+            var i = 0;
+            foreach (var v in enm)
+            {
+                if (i >= Columns) throw new ArgumentException("Enumerable has more elements than matrix lines should");
+                arr[i] = v;
+                i++;
+            }
+            if (i < Columns) throw new ArgumentException("Enumerable has less elements than matrix lines should");
+            _arr[line]=arr;
+        }
+
+        public double ToScalar()
+        {
+            if (Lines > 1 || Columns > 1) throw new InvalidOperationException("Matrix doesn't contain only one value");
+            return this[0, 0];
+        }
+
+        public override string ToString()
+        {
+            return $"[{Lines},{Columns}]";
+        }
+    }
+}
