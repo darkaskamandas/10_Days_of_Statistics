@@ -1,0 +1,30 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+class Solution {
+    
+    static double Probability(double mean, double sdev, double x) {
+        return Math.Exp((x-mean)*(x-mean)/(-2.0*sdev*sdev))/(sdev*Math.Sqrt(2.0*Math.PI));
+    }
+    
+    static void Main(String[] args) {
+        var Limit = Convert.ToDouble(Console.ReadLine().Trim());
+        var N = Convert.ToDouble(Console.ReadLine().Trim());
+        var MeanX = Convert.ToDouble(Console.ReadLine().Trim());
+        var SDevX = Convert.ToDouble(Console.ReadLine().Trim());
+        
+        var MeanS = N * MeanX;
+        var SDevS = Math.Sqrt(N) * SDevX;
+        
+        var P = 0.0d;
+        var step = 1.0d;
+        for (double i = 0.0d; i <= 9800; i += step)
+        {
+            P += Probability(MeanS, SDevS, i)*step;
+        }
+        
+        Console.WriteLine("{0:0.0000}", P);
+    }
+    
+}
