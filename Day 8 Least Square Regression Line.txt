@@ -1,0 +1,58 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+class Solution {
+    
+    static void Main(String[] args) {
+        var MathScore = new double[5];
+        var StatScore = new double[5];
+        for (var i = 0; i < 5; ++i) {           
+            var arr = Console.ReadLine().Trim().Split().Select(x => Convert.ToDouble(x)).ToArray();
+            MathScore[i] = arr[0];
+            StatScore[i] = arr[1];
+        }
+        
+        var p = PearsonCorrelationCoefficient(MathScore, StatScore);
+        var b = p * StandardDeviation(StatScore) / StandardDeviation(MathScore);
+        var a = Mean(StatScore) - b * Mean(MathScore);
+        
+        var s = a + b*80.0d;
+        
+        Console.WriteLine("{0:0.000}", s);
+    }
+    
+    static double Mean(double[] X) {
+        var sum = 0.0d;
+        for (var i = 0; i < X.Length; ++i) { sum += X[i]; }
+        return sum / Convert.ToDouble(X.Length);
+    }
+    
+    static double Covariance(double[] X, double[] Y) {
+        var N = Math.Min(X.Length, Y.Length);
+        var meanX = Mean(X);
+        var meanY = Mean(Y);
+        var sum = 0.0d;
+        for (var i = 0; i < N; ++i) { sum += (X[i] - meanX)*(Y[i] - meanY); }
+        return sum / Convert.ToDouble(N);        
+    }
+    
+    static double StandardDeviation(double[] X) {
+        var meanX = Mean(X);
+        var sum = 0.0d;
+        for (var i = 0; i < X.Length; ++i) { 
+            sum += Math.Pow(X[i] - meanX, 2.0d);
+        }
+        return Math.Sqrt(sum / Convert.ToDouble(X.Length));
+    }
+    
+    static double PearsonCorrelationCoefficient(double[] X, double[] Y) {
+        var stdDevX = StandardDeviation(X);
+        var stdDevY = StandardDeviation(Y);
+        var covXY = Covariance(X, Y);
+        return covXY / (stdDevX * stdDevY);
+    }
+
+    
+}
